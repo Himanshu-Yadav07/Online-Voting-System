@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VoteSphere &mdash; Secure Digital Voting</title>
+
+<!-- Google Fonts: Space Grotesk for display/headings, Inter for body copy -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<!-- Chart.js for the admin results visualisation -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ======================= TOP NAVIGATION ======================= -->
+<nav class="topnav" id="topnav">
+  <div class="topnav__brand" data-nav="landing">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="30" height="30">
+        <polygon points="20,3 35,11 35,26 20,37 5,26 5,11" fill="none" stroke="url(#gradA)" stroke-width="2"/>
+        <path d="M12 20 L17 26 L28 13" fill="none" stroke="url(#gradA)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="gradA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3b82f6"/>
+            <stop offset="1" stop-color="#06b6d4"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </span>
+    <span class="brand-name">VoteSphere</span>
+  </div>
+
+  <div class="topnav__links">
+    <button class="navlink" data-nav="landing">Home</button>
+    <button class="navlink" data-nav="login">Voter Login</button>
+    <button class="navlink" data-nav="register">Register</button>
+    <button class="navlink navlink--ghost" id="adminEntry" title="Election Commission access">⌁ Admin</button>
+    <button class="navlink navlink--danger hidden" id="logoutBtn">Log out</button>
+  </div>
+</nav>
+
+<!-- ======================= LANDING VIEW ======================= -->
+<section class="view" id="view-landing">
+  <div class="hero">
+    <div class="hero__copy">
+      <p class="eyebrow-free">Election cycle · Open now</p>
+      <h1 class="hero__title">Your vote,<br/><span class="hero__title-accent">verified &amp; sealed.</span></h1>
+      <p class="hero__sub">Himanshu lets every registered student cast exactly one ballot, cryptographically locked the moment it's submitted &mdash; no re-votes, no duplicates, no doubt.</p>
+      <div class="hero__cta">
+        <button class="btn btn--primary" data-nav="register">Register to Vote</button>
+        <button class="btn btn--outline" data-nav="login">I'm already registered</button>
+      </div>
+      <div class="hero__stats" id="landingStats">
+        <div class="stat"><span class="stat__num" id="statVoters">0</span><span class="stat__label">Registered voters</span></div>
+        <div class="stat"><span class="stat__num" id="statCast">0</span><span class="stat__label">Ballots cast</span></div>
+        <div class="stat"><span class="stat__num" id="statCandidates">0</span><span class="stat__label">Candidates</span></div>
+      </div>
+    </div>
+
+    <div class="hero__art" aria-hidden="true">
+      <!-- Animated glowing ballot box accepting a digital ballot -->
+      <svg viewBox="0 0 320 320" class="ballot-anim">
+        <defs>
+          <linearGradient id="boxGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1e293b"/>
+            <stop offset="1" stop-color="#0f172a"/>
+          </linearGradient>
+          <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3b82f6"/>
+            <stop offset="1" stop-color="#06b6d4"/>
+          </linearGradient>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- glow pulse rings behind the box -->
+        <circle cx="160" cy="210" r="90" class="pulse-ring pulse-ring--a"/>
+        <circle cx="160" cy="210" r="90" class="pulse-ring pulse-ring--b"/>
+
+        <!-- ballot box body -->
+        <path d="M70 170 L250 170 L235 280 L85 280 Z" fill="url(#boxGrad)" stroke="#334155" stroke-width="2"/>
+        <path d="M70 170 L250 170 L242 190 L78 190 Z" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <rect x="130" y="170" width="60" height="10" rx="2" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5" filter="url(#glow)"/>
+
+        <!-- falling ballot card -->
+        <g class="ballot-card" filter="url(#glow)">
+          <rect x="135" y="20" width="50" height="66" rx="6" fill="url(#cardGrad)" opacity="0.95"/>
+          <path d="M147 52 L157 62 L173 40" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+
+        <!-- little status LEDs on the box front -->
+        <circle cx="95" cy="230" r="4" class="led led--on"/>
+        <circle cx="112" cy="230" r="4" class="led"/>
+        <circle cx="129" cy="230" r="4" class="led"/>
+      </svg>
+      <p class="hero__art-caption">Live ballot intake — encrypted on submit</p>
+    </div>
+  </div>
+
+  <div class="feature-row">
+    <div class="feature-card">
+      <span class="feature-card__icon">◈</span>
+      <h3>One person, one vote</h3>
+      <p>Aadhar and roll numbers are checked against every past registration, so duplicate identities are rejected outright.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-card__icon">◈</span>
+      <h3>Locked the instant you vote</h3>
+      <p>The moment a ballot is submitted, that voter's session is permanently sealed &mdash; no edits, no resubmits.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-card__icon">◈</span>
+      <h3>Transparent tallying</h3>
+      <p>The election commission sees a live, auditable breakdown of every candidate's count the moment votes land.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= REGISTER VIEW ======================= -->
+<section class="view hidden" id="view-register">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h2 class="auth-title">Create your voter ID</h2>
+      <p class="auth-sub">Fill this in once. Your Aadhar and roll number are locked to this identity forever.</p>
+
+      <form id="registerForm" novalidate>
+        <div class="field">
+          <label for="regName">Full name</label>
+          <input type="text" id="regName" placeholder="e.g. Ananya Sharma" required minlength="3"/>
+          <span class="field__error" data-error-for="regName"></span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="regRoll">College roll number</label>
+            <input type="text" id="regRoll" placeholder="e.g. CS21B045" required minlength="3"/>
+            <span class="field__error" data-error-for="regRoll"></span>
+          </div>
+          <div class="field">
+            <label for="regBranch">Branch / Department</label>
+            <select id="regBranch" required>
+              <option value="" disabled selected>Select branch</option>
+              <option>Computer Science</option>
+              <option>Electronics</option>
+              <option>Mechanical</option>
+              <option>Civil</option>
+              <option>Electrical</option>
+              <option>Information Technology</option>
+              <option>Other</option>
+            </select>
+            <span class="field__error" data-error-for="regBranch"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="regAadhar">Aadhar card number</label>
+          <input type="number" id="regAadhar" placeholder="12-digit number, e.g. 123456789012" oninput="if(this.value.length > 12) this.value=this.value.slice(0,12);" required inputmode="numeric" maxlength="12"/>
+          <span class="field__hint">Exactly 12 digits. Used once per person, for verification only.</span>
+          <span class="field__error" data-error-for="regAadhar"></span>
+        </div>
+
+        <div class="field">
+          <label for="regEmail">Email address</label>
+          <input type="email" id="regEmail" placeholder="you@college.edu" required/>
+          <span class="field__error" data-error-for="regEmail"></span>
+        </div>
+
+        <div class="field">
+          <label for="regPassword">Create password</label>
+          <input type="password" id="regPassword" placeholder="At least 6 characters" required minlength="6"/>
+          <span class="field__error" data-error-for="regPassword"></span>
+        </div>
+
+        <div class="form-banner hidden" id="registerBanner"></div>
+
+        <button type="submit" class="btn btn--primary btn--block">Register &amp; continue</button>
+        <p class="auth-switch">Already registered? <button type="button" class="link-btn" data-nav="login">Log in</button></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LOGIN VIEW ======================= -->
+<section class="view hidden" id="view-login">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h2 class="auth-title">Voter login</h2>
+      <p class="auth-sub">Sign in with your roll number or Aadhar number and password.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginId">Roll number or Aadhar number</label>
+          <input type="text" id="loginId" placeholder="e.g. CS21B045" required/>
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" required/>
+        </div>
+
+        <div class="form-banner hidden" id="loginBanner"></div>
+
+        <button type="submit" class="btn btn--primary btn--block">Log in</button>
+        <p class="auth-switch">New here? <button type="button" class="link-btn" data-nav="register">Create a voter ID</button></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= ADMIN LOGIN VIEW ======================= -->
+<section class="view hidden" id="view-admin-login">
+  <div class="auth-shell">
+    <div class="auth-card auth-card--admin">
+      <span class="admin-badge">Election Commission</span>
+      <h2 class="auth-title">Administrator access</h2>
+      <p class="auth-sub">Restricted panel. Enter the commission passcode to continue.</p>
+
+      <form id="adminLoginForm" novalidate>
+        <div class="field">
+          <label for="adminPass">Passcode</label>
+          <input type="password" id="adminPass" placeholder="Enter passcode" required/>
+          
+        </div>
+        <div class="form-banner hidden" id="adminLoginBanner"></div>
+        <button type="submit" class="btn btn--primary btn--block">Enter dashboard</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= VOTING DASHBOARD ======================= -->
+<section class="view hidden" id="view-vote">
+  <div class="dash-header">
+    <div>
+      <p class="eyebrow-free">Welcome back</p>
+      <h2 class="dash-title" id="voterWelcome">Voter</h2>
+    </div>
+    <div class="status-chip" id="voterStatusChip">Not yet voted</div>
+  </div>
+
+  <div class="candidate-grid" id="candidateGrid"><!-- injected by script.js --></div>
+</section>
+
+<!-- ======================= THANK YOU / RECEIPT VIEW ======================= -->
+<section class="view hidden" id="view-thankyou">
+  <div class="receipt">
+    <div class="receipt__seal">
+      <svg viewBox="0 0 120 120" width="120" height="120">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="#10b981" stroke-width="3" class="seal-ring"/>
+        <path d="M35 62 L52 78 L86 40" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" class="seal-check"/>
+      </svg>
+    </div>
+    <h2 class="receipt__title">Your vote is recorded.</h2>
+    <p class="receipt__sub">Thank you, <span id="receiptName">voter</span>. Ballot sealed for <strong id="receiptCandidate">—</strong>. This decision can't be changed &mdash; your voting session is now closed.</p>
+    <div class="receipt__meta">
+      <div><span>Voter ID</span><strong id="receiptId">—</strong></div>
+      <div><span>Timestamp</span><strong id="receiptTime">—</strong></div>
+    </div>
+    <button class="btn btn--outline" data-nav="landing">Return home</button>
+  </div>
+</section>
+
+<!-- ======================= ADMIN DASHBOARD ======================= -->
+<section class="view hidden" id="view-admin">
+  <div class="dash-header">
+    <div>
+      <p class="eyebrow-free">Election Commission</p>
+      <h2 class="dash-title">Live control room</h2>
+    </div>
+    <button class="btn btn--danger-outline" id="adminLogoutBtn">Exit admin</button>
+  </div>
+
+  <div class="admin-grid">
+    <!-- summary cards -->
+    <div class="admin-summary">
+      <div class="summary-card">
+        <span class="summary-card__label">Registered voters</span>
+        <span class="summary-card__value" id="adminTotalVoters">0</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Votes cast</span>
+        <span class="summary-card__value" id="adminVotesCast">0</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Yet to vote</span>
+        <span class="summary-card__value" id="adminNotVoted">0</span>
+      </div>
+      <div class="summary-card summary-card--accent">
+        <span class="summary-card__label">Turnout</span>
+        <span class="summary-card__value" id="adminTurnout">0%</span>
+      </div>
+    </div>
+
+    <!-- winner banner -->
+    <div class="winner-banner" id="winnerBanner">
+      <span class="winner-banner__label">Current leader</span>
+      <span class="winner-banner__name" id="winnerName">No votes yet</span>
+    </div>
+
+    <!-- charts -->
+    <div class="chart-panel">
+      <h3>Vote distribution</h3>
+      <canvas id="votesBarChart" height="220"></canvas>
+    </div>
+    <div class="chart-panel">
+      <h3>Share of votes</h3>
+      <canvas id="votesPieChart" height="220"></canvas>
+    </div>
+
+    <!-- candidate management -->
+    <div class="panel panel--wide">
+      <div class="panel__header">
+        <h3>Manage candidates</h3>
+      </div>
+
+      <form id="addCandidateForm" class="candidate-form" novalidate>
+        <input type="text" id="candName" placeholder="Candidate name" required/>
+        <input type="text" id="candParty" placeholder="Party / Panel name" required/>
+        <input type="text" id="candManifesto" placeholder="One-line manifesto" required/>
+        <button type="submit" class="btn btn--primary">Add candidate</button>
+      </form>
+
+      <div class="admin-candidate-list" id="adminCandidateList"><!-- injected --></div>
+    </div>
+
+    <!-- voter roll -->
+    <div class="panel panel--wide">
+      <div class="panel__header">
+        <h3>Voter roll</h3>
+      </div>
+      <div class="table-wrap">
+        <table class="voter-table">
+          <thead>
+            <tr><th>Name</th><th>Roll No.</th><th>Branch</th><th>Status</th></tr>
+          </thead>
+          <tbody id="adminVoterTableBody"><!-- injected --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= MODAL: CONFIRM VOTE ======================= -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal">
+    <h3>Confirm your vote</h3>
+    <p>You're about to vote for <strong id="modalCandidateName">—</strong>. <span class="modal__warning">Votes cannot be changed once submitted.</span> Are you certain?</p>
+    <div class="modal__actions">
+      <button class="btn btn--outline" id="modalCancel">Go back</button>
+      <button class="btn btn--primary" id="modalConfirm">Yes, cast my vote</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= TOAST ======================= -->
+<div class="toast hidden" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
